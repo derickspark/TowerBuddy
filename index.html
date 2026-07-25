@@ -363,8 +363,25 @@
   });
   canvas.addEventListener("mousedown", (e) => { e.preventDefault(); pressDown(); });
   window.addEventListener("mouseup", (e) => { pressUp(); });
-  canvas.addEventListener("touchstart", (e) => { e.preventDefault(); pressDown(); }, {passive:false});
-  window.addEventListener("touchend", (e) => { e.preventDefault(); pressUp(); }, {passive:false});
+  // NOTE: only preventDefault for touches that START on the canvas.
+  // Calling preventDefault on touchend anywhere on the page suppresses the
+  // synthetic click event, which made the start/retry buttons dead on mobile.
+  let touchHeld = false;
+  canvas.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    touchHeld = true;
+    pressDown();
+  }, {passive:false});
+  window.addEventListener("touchend", (e) => {
+    if (touchHeld) {
+      touchHeld = false;
+      e.preventDefault();
+      pressUp();
+    }
+  }, {passive:false});
+  window.addEventListener("touchcancel", () => {
+    if (touchHeld) { touchHeld = false; pressUp(); }
+  });
 
   // ---- Particles ----
   function spawnBurst(x, y, color, n) {
