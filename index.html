@@ -397,7 +397,7 @@
     camTop = player.y - H * 0.42;
     camTarget = camTop;
     score = 0; jumps = 0;
-    charging = false; power = POWER_MIN; powerDir = 1;
+    charging = false; inputHeld = false; power = POWER_MIN; powerDir = 1;
     particles = [];
   }
 
@@ -535,11 +535,16 @@
   }
 
   // ================= Input =================
+  // inputHeld buffers a press made while airborne: charging then starts
+  // automatically the moment the player lands.
+  let inputHeld = false;
   function pressDown() {
     if (state !== "play") return;
+    inputHeld = true;
     if (player.onGround && !charging) { charging = true; power = POWER_MIN; powerDir = 1; }
   }
   function pressUp() {
+    inputHeld = false;
     if (state !== "play") return;
     if (charging) { charging = false; doJump(power); }
   }
@@ -648,6 +653,7 @@
               spawnBurst(player.x + CHAR_W / 2, player.y + CHAR_H, "#ff5da2", 10);
             } else {
               sfx("land");
+              if (inputHeld && !charging) { charging = true; power = POWER_MIN; powerDir = 1; }
             }
             break;
           }
